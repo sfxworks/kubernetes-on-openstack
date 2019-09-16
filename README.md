@@ -34,8 +34,8 @@ Openstack makes a kubeadm worker using a packer image and has it join my cluster
 
 Todo
 
-[ ] Sample user-data with cloud.conf 
-[ ] Sample `openstack loadbalancer create` command
-[ ] Sample `openstack server create` commands with workers using no volumes 
-[ ] A tidy bash script that does all of the above
-[ ] A pretty hugo github page
+- [ ] Sample user-data with cloud.conf
+- [ ] Sample `openstack loadbalancer create` command
+- [ ] Sample `openstack server create` commands with workers using no volumes 
+- [ ] A tidy bash script that does all of the above
+- [ ] A pretty hugo github page
