@@ -2,6 +2,8 @@
 
 Packer image that just has the essentials for kubeadm ready. 
 
+Image ID: 6520b1b6-8987-4ce6-9d54-b1d229ce11c3
+
 ```
 [   18.930659] cloud-init[965]: Cloud-init v. 19.2-24-ge7881d5c-0ubuntu1~18.04.1 running 'modules:config' at Mon, 16 Sep 2019 06:47:16 +0000. Up 18.07 seconds.
 [[0;32m  OK  [0m] Started Apply the settings specified in cloud-config.
