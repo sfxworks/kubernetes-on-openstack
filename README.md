@@ -1,6 +1,6 @@
 # kubernetes on openstack
 
-Openstack image that is kubeam ready for user-data.
+Openstack image that is kubeadm ready for user-data.
 
 Take advantage of Glance to build images to launch kubernetes quicky!
 
