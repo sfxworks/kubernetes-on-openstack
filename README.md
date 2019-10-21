@@ -1,4 +1,4 @@
-# kubeadm-ubuntu
+# kubernetes on openstack
 
 Openstack image that is kubeam ready for user-data.
 
