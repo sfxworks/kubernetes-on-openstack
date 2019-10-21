@@ -1,8 +1,8 @@
 [Global]
-auth-url=
+auth-url=https://cloud.lax1.imhcloud.net:5000/v3
 application-credential-id=
 application-credential-secret=
-region=
+region=lax1
 
 [LoadBalancer]
 subnet-id=
@@ -13,7 +13,6 @@ lb-version=v2
 monitor-delay=10s
 monitor-max-retries=10
 monitor-timeout=10s
-node-security-group=
 internal-lb=true
 
 [BlockStorage]
@@ -21,8 +20,6 @@ bs-version=v2
 node-volume-attach-limit=128
 
 [Networking]
-public-network-name=public
-internal-network-name=internal
+public-network-name=
+internal-network-name=
 ipv6-support-disabled=false
-
-#Additional configuration options can be found at https://github.com/kubernetes/cloud-provider-openstack/blob/master/docs/provider-configuration.md

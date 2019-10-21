@@ -1,14 +1,15 @@
 {
   "builders": [{
     "type": "openstack",
-    "image_name": "Kubernetes-1.15.3-containerd-1.3.0-ubuntu",
+    "image_name": "Kubernetes-1.16.2-containerd-1.3.0-runc-1.0.0-rc9",
     "identity_endpoint": "https://cloud.lax1.imhcloud.net:5000/v3",
-    "source_image": "97286328-a87d-4cb0-86e1-3f7fdf59ecc1",
+    "source_image": "df30226a-57ee-4642-9d8d-5ce6ea7c013b",
     "ssh_username": "ubuntu", 
-    "region": "iad1",
+    "region": "lax1",
     "reuse_ips": true,
     "flavor": "m1.small",
-    "image_visibility": "community" 
+    "image_visibility": "community",
+    "networks": ["4260cf69-4298-4162-bac3-e9ac42b75d18"]
   }],
   "provisioners": [
     {

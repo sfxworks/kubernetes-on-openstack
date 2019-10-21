@@ -3,10 +3,10 @@
 set -e
 
 sudo su <<HERE
-
+set -e
 #install kubernetes
 
-apt-get update && apt-get install -y apt-transport-https curl
+apt-get update && apt-get install -y apt-transport-https curl ipset
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
 deb https://apt.kubernetes.io/ kubernetes-xenial main
@@ -22,10 +22,10 @@ sudo mkdir -p \
   /opt/cni/bin \
   /etc/containerd
 
-wget https://github.com/containernetworking/plugins/releases/download/v0.8.1/cni-plugins-linux-amd64-v0.8.1.tgz
-wget https://github.com/containerd/containerd/releases/download/v1.3.0-beta.0/containerd-1.3.0-beta.0.linux-amd64.tar.gz
-wget https://storage.googleapis.com/gvisor/releases/nightly/latest/runsc
-wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc8/runc.amd64
+wget -nv https://github.com/containernetworking/plugins/releases/download/v0.8.2/cni-plugins-linux-amd64-v0.8.2.tgz
+wget -nv https://github.com/containerd/containerd/releases/download/v1.3.0/containerd-1.3.0.linux-amd64.tar.gz
+wget -nv https://storage.googleapis.com/gvisor/releases/nightly/latest/runsc
+wget -nv https://github.com/opencontainers/runc/releases/download/v1.0.0-rc9/runc.amd64
 
 mv runc.amd64 /usr/bin/runc
 chmod +x /usr/bin/runc
@@ -53,12 +53,12 @@ LimitCORE=infinity
 WantedBy=multi-user.target
 EOF
 
-tar -xvf cni-plugins-linux-amd64-v0.8.1.tgz -C /opt/cni/bin/
-tar -xvf containerd-1.3.0-beta.0.linux-amd64.tar.gz -C /
+tar -xvf cni-plugins-linux-amd64-v0.8.2.tgz -C /opt/cni/bin/
+tar -xvf containerd-1.3.0.linux-amd64.tar.gz -C /
 
 
 #install gvisor-containerd-shim
-wget  -O gvisor-containerd-shim https://github.com/google/gvisor-containerd-shim/releases/download/v0.0.3/gvisor-containerd-shim.linux-amd64
+wget -nv -O gvisor-containerd-shim https://github.com/google/gvisor-containerd-shim/releases/download/v0.0.3/gvisor-containerd-shim.linux-amd64
 chmod +x gvisor-containerd-shim
 sudo mv gvisor-containerd-shim /usr/local/bin/gvisor-containerd-shim
 
@@ -92,7 +92,5 @@ systemctl enable containerd
 systemctl start containerd
 swapoff -a
 
-apt-get install -y ipset 
-
-kubeadm config images pull --cri-socket=/var/run/containerd/containerd.sock
+kubeadm config images pull --cri-socket=/var/run/containerd/containerd.sock --v=5
 HERE
