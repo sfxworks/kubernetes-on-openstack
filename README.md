@@ -30,3 +30,11 @@ This will include your cloud-config authentication file. Make sure to keep the `
 ### You're set!
 Your environment is ready!
 >Tip, you can set userdata for your master/worker nodes for quick launches, such as `kubeadm init` and `kubeadm join`. Note the `bootstrapTokens` in the `kubeadm-config.yaml` file. 
+
+
+
+##TODO
+
+- Dynamically configure everything via terraform
+- kubectl plugin for quick installs/boostrap
+- include/incorperate git version control of cluster such as fluxctl
