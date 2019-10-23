@@ -22,8 +22,6 @@ kubernetesVersion: stable
 networking:
   podSubnet: 10.244.0.0/16
 controllerManager:
-  extraArgs:
-    "external-cloud-volume-plugin": "openstack"
   extraVolumes:
   - name: "cloud-config"
     hostPath: "/etc/kubernetes/cloud-config"
