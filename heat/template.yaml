@@ -1,0 +1,135 @@
+heat_template_version: "2018-08-31"
+description: "Kubeadm Template utilizing the kubadm community image."
+
+#https://docs.openstack.org/heat/stein/template_guide/software_deployment.html#signals-and-wait-conditions
+#https://docs.openstack.org/heat/latest/template_guide/hot_spec.html
+#https://docs.openstack.org/heat/stein/template_guide/openstack.html#OS::Neutron::LBaaS::LoadBalancer
+#TODO Consider https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-join/#turning-off-auto-approval-of-node-client-certificates or include token/render in template
+#TODO dump /etc/kubernetes/admin.conf
+
+#Weirdest error award:
+#worker login: [   26.221713] cloud-init[969]: Error: unknown shorthand flag: '��' in -���discovery-token-unsafe-skip-ca-verification  
+
+resources:
+  k8s_net:
+    type: OS::Neutron::Net
+
+  k8s_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: k8s_net }
+      cidr: "10.0.2.0/24"
+      dns_nameservers: [ "1.1.1.1", "1.0.0.1" ]
+      ip_version: 4
+  
+  #k8s_router:
+  #  type: OS::Neutron::Router
+  #  properties:
+  #    external_gateway_info: { network: Internet }
+  
+  k8s_subnet_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: b5e9a9a5-daa3-49c8-8952-50dd9094b2b2
+      subnet: { get_resource: k8s_subnet }
+  
+
+
+  master_instance_port:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_resource: k8s_net }
+      fixed_ips:
+        - ip_address: 10.0.2.15
+        #- subnet_id: { get_resource: k8s_subnet }
+        
+  
+  #Master_Volume: 
+  #  type: "OS::Cinder::Volume"
+  #  properties: 
+  #    name: "master-1"
+  #    size: 20
+  #    volume_type: "6db3c601-206d-42c3-a245-95a596a2b5d1"
+  #    availability_zone: nova
+  wait_condition:
+    type: OS::Heat::WaitCondition
+    properties:
+      handle: { get_resource: wait_handle }
+      count: 1
+      timeout: 300
+  
+  wait_handle:
+    type: OS::Heat::WaitConditionHandle
+  
+  Master_Node1: 
+    type: "OS::Nova::Server"
+    properties: 
+      networks: 
+        - port: { get_resource: master_instance_port }
+      name: "master-1"
+      flavor: "m1.medium"
+      image: "ce464e78-ee1e-44a8-88ad-08a72cdb038f"
+      availability_zone: nova
+      key_name: "openstack-ssh"
+      image_update_policy: REPLACE
+      user_data_update_policy: IGNORE
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/sh
+            set -e
+            kubeadm init --config /home/ubuntu/kubeadm-config.yaml
+            cat /etc/kubernetes/admin.conf
+            wc_notify --data-binary "{\"status\": \"SUCCESS\"}"
+          params:
+            wc_notify: { get_attr: [wait_handle, curl_cli] }
+  
+  wait_condition_worker:
+    type: OS::Heat::WaitCondition
+    properties:
+      handle: { get_resource: wait_handle_worker }
+      count: 1
+      timeout: 300
+  
+  wait_handle_worker:
+    type: OS::Heat::WaitConditionHandle
+
+  Container_1: 
+    type: "OS::Swift::Container"
+    properties: 
+      PurgeOnDelete: true
+      name: "k8s-etcd-backup"
+  Worker: 
+    type: "OS::Nova::Server"
+    properties: 
+      name: "worker"
+      flavor: "m1.small"
+      key_name: "openstack-ssh"
+      image: "ce464e78-ee1e-44a8-88ad-08a72cdb038f"
+      availability_zone: nova
+      flavor_update_policy: REPLACE
+      image_update_policy: REPLACE
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/sh
+            set -e
+            kubeadm join 10.0.2.45:6443 --token "jz4v8t.r7j2asmt9vky557c" -–discovery-token-unsafe-skip-ca-verification
+            wc_notify --data-binary "{\"status\": \"SUCCESS\"}"
+          params:
+            wc_notify: { get_attr: [wait_handle_worker, curl_cli] }   
+      user_data_update_policy: REPLACE
+      networks: 
+        - network: { get_resource: k8s_net }
+    depends_on: 
+      - Master_Node1
+      - wait_condition
+
+#outputs:
+#  wc_kube_config:
+#    value:
+#      filter:
+#      - ['kube-config']
+#      - { get_attr: [wait_condition, data] }
