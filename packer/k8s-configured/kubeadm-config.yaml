@@ -4,9 +4,9 @@ nodeRegistration:
   kubeletExtraArgs:
     cloud-provider: "external"
 bootstrapTokens:
-- token: "jz4v8t.r7j2asmt9vky557c"
-  description: "kubeadm bootstrap token"
-  ttl: "1h"
+#- token: "jz4v8t.r7j2asmt9vky557c"
+#  description: "kubeadm bootstrap token"
+#  ttl: "1h"
 #- token: "v6tnhv.rxs8u4868se7r64r"
 #  description: "tls bootstrap token"
 #  usages:
