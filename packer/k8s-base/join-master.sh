@@ -1,8 +1,11 @@
 #!/bin/sh
+set -e
 
 sudo su <<HERE
-sudo mkdir -p /etc/kubernetes
-sudo mkdir -p /var/lib/kubelet
+set -e
+mkdir -p /etc/kubernetes
+mkdir -p /var/lib/kubelet
+mkdir -p /etc/default/kubelet
 
 cat <<EOF | sudo tee /etc/kubernetes/kubeadm-config.yaml
 apiVersion: kubeadm.k8s.io/v1beta2
