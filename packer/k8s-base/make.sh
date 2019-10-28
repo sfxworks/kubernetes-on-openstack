@@ -94,10 +94,6 @@ swapoff -a
 
 kubeadm config images pull --cri-socket=/var/run/containerd/containerd.sock --v=5
 
-#Init scripts
-mv /home/ubuntu/init-master.sh /root
-mv /home/ubuntu/join-master.sh /root
-mv /home/ubuntu/join-worker.sh /root
 HERE
 
 

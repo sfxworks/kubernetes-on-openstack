@@ -1,4 +1,4 @@
-
+#!/bin/sh
 
 sudo su <<HERE
 sudo mkdir -p /etc/kubernetes

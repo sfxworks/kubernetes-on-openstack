@@ -13,21 +13,6 @@
   }],
   "provisioners": [
     {
-      "type": "file",
-      "source": "./init-master.sh",
-      "destination": "/home/ubuntu/init-master.sh"
-    },
-    {
-      "type": "file",
-      "source": "./join-master.sh",
-      "destination": "/home/ubuntu/join-master.sh"
-    },
-    {
-      "type": "file",
-      "source": "./join-worker.sh",
-      "destination": "/home/ubuntu/join-worker.sh"
-    },
-    {
       "type": "shell",
       "script": "./make.sh"
     }
