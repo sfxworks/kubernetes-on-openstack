@@ -14,8 +14,6 @@ description: "Kubeadm Template utilizing the kubadm community image."
 parameters:
   cluster-cidr:
     default: "10.0.2.0/24"
-  cluster-endpoint-ip: #I don't like doing this either but one of our regions doesnt have load balancing yet
-    default: "10.0.2.11"
   endpoint:
     default: k8s-lax1.sfxworks.net
   bootstrap-token:
@@ -40,6 +38,8 @@ parameters:
     default: lax1
   zone:
     default: lax1.sfxworks.net #An existing zone to use
+  subnet-name:
+    default: k8s-internal
   image:
     default: 0ce8697b-332d-451f-9dd2-a6de8c843670
     #==> openstack: Waiting for image HOT_Kubernetes-1.16.2-containerd-1.3.0-runc-1.0.0-rc9 (image id: 0ce8697b-332d-451f-9dd2-a6de8c843670) to become ready...
@@ -52,7 +52,7 @@ resources:
     properties:
       description: k8s api endpoint
       name: k8s
-      records: { get_param: cluster-endpoint-ip }
+      records: { get_attr: master_instance_port, fixed_ips, 0 }
       ttl: 30
       type: A
       zone: { get_param: zone }
@@ -67,6 +67,7 @@ resources:
       cidr: "10.0.2.0/24"
       dns_nameservers: { get_param: dns }
       ip_version: 4
+      name: { get_param: subnet-name }
   
   k8s_subnet_interface:
     type: OS::Neutron::RouterInterface
@@ -106,16 +107,27 @@ resources:
       user_data_format: RAW
       user_data:
         str_replace:
-          template: {get_file: init-master.sh}
+          template: {get_file: https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/packer/k8s-base/init-master.sh}
           params:
             wc_notify: { get_attr: [wait_handle, curl_cli] }
-            
-  
+            $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
+            $CERTIFICATE_KEY: { get_param: certificate-key }
+            $ENDPOINT: { get_param: endpoint }
+            $CLUSTER_CIDR: { get_param: cluster-cidr }
+            $OS_AUTH_URL: { get_param: os-auth-url }
+            $OS_APPLICATION_CREDENTIAL_ID: {get_param: os-acid}
+            $OS_APPLICATION_CREDENTIAL_SECRET: { get_param: os-acs }
+            $OS_REGION_NAME: { get_param: os-region }
+            $LB_SUBNET_ID: { get_resource: k8s_subnet }
+            $LB_FLOATING_NETWORK_ID: { get_param: floating-ip-network }
+            $NET_PUBLIC: { get_param: subnet-name }
+            $NET_INTERNAL: { get_param: subnet-name }
+
   master_condition_worker:
     type: OS::Heat::WaitCondition
     properties:
       handle: { get_resource: wait_handle_worker }
-      count: 1
+      count: 2
       timeout: 300
   
   wait_handle_worker:
@@ -126,6 +138,8 @@ resources:
     properties: 
       PurgeOnDelete: true
       name: "k8s-etcd-backup"
+
+  
   worker: 
     type: "OS::Nova::Server"
     properties: 
@@ -139,9 +153,20 @@ resources:
       user_data_format: RAW
       user_data:
         str_replace:
-          template: {get_file: join-worker.sh}
+          template: {get_file: https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/packer/k8s-base/init-worker.sh}
           params:
-            wc_notify: { get_attr: [wait_handle_worker, curl_cli] }   
+            wc_notify: { get_attr: [wait_handle, curl_cli] }
+            $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
+            $ENDPOINT: { get_param: endpoint }
+            $CLUSTER_CIDR: { get_param: cluster-cidr }
+            $OS_AUTH_URL: { get_param: os-auth-url }
+            $OS_APPLICATION_CREDENTIAL_ID: {get_param: os-acid}
+            $OS_APPLICATION_CREDENTIAL_SECRET: { get_param: os-acs }
+            $OS_REGION_NAME: { get_param: os-region }
+            $LB_SUBNET_ID: { get_resource: k8s_subnet }
+            $LB_FLOATING_NETWORK_ID: { get_param: floating-ip-network }
+            $NET_PUBLIC: { get_param: subnet-name }
+            $NET_INTERNAL: { get_param: subnet-name }
       user_data_update_policy: REPLACE
       networks: 
         - network: { get_resource: k8s_net }
@@ -149,9 +174,9 @@ resources:
       - master_node1
       - master_condition
 
-#outputs:
-#  wc_kube_config:
-#    value:
-#      filter:
-#      - ['kube-config']
-#      - { get_attr: [master_condition, data] }
+outputs:
+  wc_kube_config:
+    value:
+      filter:
+      - ['config']
+      - { get_attr: [master_condition, data] }
