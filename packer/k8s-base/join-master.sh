@@ -1,0 +1,55 @@
+
+
+sudo su <<HERE
+sudo mkdir -p /etc/kubernetes
+sudo mkdir -p /var/lib/kubelet
+
+cat <<EOF | sudo tee /etc/kubernetes/kubeadm-config.yaml
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    apiServerEndpoint: $ENDPOINT:6443
+    token: $BOOTSTRAP_TOKEN
+    unsafeSkipCAVerification: true
+  timeout: 5m0s
+controlPlane:
+  certificateKey: $CERTIFICATE_KEY
+EOF
+
+cat <<EOF | sudo tee /etc/default/kubelet/kubelet-extra-args.env
+KUBELET_EXTRA_ARGS="--cloud-provider=external --network-plugin=kubenet --non-masquerade-cidr=$CLUSTER_CIDR"
+EOF
+
+cat <<EOF | sudo tee /etc/kubernetes/cloud-config
+[Global]
+auth-url=$OS_AUTH_URL
+application-credential-id=$OS_APPLICATION_CREDENTIAL_ID
+application-credential-secret=$OS_APPLICATION_CREDENTIAL_SECRET
+region=$OS_REGION_NAME
+
+[LoadBalancer]
+subnet-id=$LB_SUBNET_ID
+floating-network-id=$LB_FLOATING_NETWORK_ID
+create-monitor=true
+use-octavia=true
+lb-version=v2
+monitor-delay=10s
+monitor-max-retries=10
+monitor-timeout=10s
+internal-lb=true
+
+[BlockStorage]
+bs-version=v2
+node-volume-attach-limit=128
+
+[Networking]
+public-network-name=$NET_PUBLIC
+internal-network-name=$NET_INTERNAL
+ipv6-support-disabled=false
+EOF
+
+kubeadm join --config /etc/kubernetes/kubeadm-config.yaml --control-plane
+wc_notify --data-binary '{"status": "SUCCESS"}'
+
+HERE

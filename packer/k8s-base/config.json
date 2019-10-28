@@ -1,7 +1,7 @@
 {
   "builders": [{
     "type": "openstack",
-    "image_name": "Kubernetes-1.16.2-containerd-1.3.0-runc-1.0.0-rc9",
+    "image_name": "HOT_Kubernetes-1.16.2-containerd-1.3.0-runc-1.0.0-rc9",
     "identity_endpoint": "https://cloud.lax1.imhcloud.net:5000/v3",
     "source_image": "df30226a-57ee-4642-9d8d-5ce6ea7c013b",
     "ssh_username": "ubuntu", 
@@ -13,8 +13,23 @@
   }],
   "provisioners": [
     {
-        "type": "shell",
-        "script": "./init.sh"
+      "type": "file",
+      "source": "./init-master.sh",
+      "destination": "/home/ubuntu/init-master.sh"
+    },
+    {
+      "type": "file",
+      "source": "./join-master.sh",
+      "destination": "/home/ubuntu/join-master.sh"
+    },
+    {
+      "type": "file",
+      "source": "./join-worker.sh",
+      "destination": "/home/ubuntu/join-worker.sh"
+    },
+    {
+      "type": "shell",
+      "script": "./make.sh"
     }
 ]
 }
