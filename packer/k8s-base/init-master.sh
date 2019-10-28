@@ -85,7 +85,8 @@ EOF
 
 kubeadm init --config /etc/kubernetes/kubeadm-config.yaml --upload-certs
 
+export ADMIN_CONFIG=$(cat /etc/kubernetes/admin.conf | base64 -w 0)
 wc_notify --data-binary '{"status": "SUCCESS"}'
-wc_notify --data-binary '{"status": "SUCCESS", "reason": "config", "id": "config", "data": "'"$(cat /etc/kubernetes/admin.conf | base64 -w 0)"'"}'
+wc_notify --data-binary '{"status": "SUCCESS", "reason": "config", "id": "config", "data": "'"$ADMIN_CONFIG"'"}'
 
 HERE
