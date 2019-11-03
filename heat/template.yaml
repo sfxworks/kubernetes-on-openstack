@@ -20,7 +20,41 @@ parameters:
   endpoint:
     type: string
     label: Kubernetes API Endpoint
-    description: The IP or DNS address (recommended) for the API endpoint of your cluster. 
+    description: The IP or DNS address (recommended) for the API endpoint of your cluster.
+  master-size:
+    type: number
+    label: Number of master nodes (Only support 1 for now :)
+    constraints:
+    - modulo:
+        step: 2
+        offset: 1
+    - range:
+        min: 1
+        max: 1
+  master-flavor:
+    type: string
+    label: Flavor of masters
+    constraints:
+    - allowed_values:
+      - m1.small
+      - m1.medium
+      - m1.large
+      - m1.xlarge
+  worker-size:
+    type: number
+    label: Number of worker nodes
+    constraints:
+    - range:
+        min: 1
+  worker-flavor:
+    type: string
+    label: Flavor of workers
+    constraints:
+    - allowed_values:
+      - m1.small
+      - m1.medium
+      - m1.large
+      - m1.xlarge
   bootstrap-token:
     default: 07401b.f395accd246ae52d # Consider https://docs.openstack.org/heat/stein/template_guide/openstack.html#OS::Heat::RandomStringor allow for external joins
     label: Bootstrap Token
@@ -88,10 +122,10 @@ parameters:
     description: The name of the SSH key to create
     default: workbench
     type: string
-  TMP_NO_LB_LAX_FIXED_PORT_ADDR:
-    type: comma_delimited_list
+  endpoint-ip:
+    type: string
     default: "10.0.2.11"
-    
+    description: The internal IP address that the endpoint resolves to. 
   
 
 
@@ -113,14 +147,6 @@ resources:
     properties:
       router_id: { get_param: router-id }
       subnet: { get_resource: k8s_subnet }
-
-  master_instance_port:
-    type: OS::Neutron::Port
-    properties:
-      network: { get_resource: k8s_net }
-      fixed_ips:
-      - subnet: { get_resource: k8s_subnet }
-        ip_address: "10.0.2.11"
         
   master_condition:
     type: OS::Heat::WaitCondition
@@ -132,13 +158,65 @@ resources:
   wait_handle:
     type: OS::Heat::WaitConditionHandle
   
-  master_node1: 
+  as_worker:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      desired_capacity: { get_param: worker-size }
+      min_size: 1
+      max_size: { get_param: worker-size }
+      resource:
+        type: "OS::Nova::Server"
+        properties: 
+          flavor: {get_param: worker-flavor}
+          key_name: { get_param: key-name }
+          block_device_mapping_v2:
+          - image: { get_param: image }
+            volume_size: 20
+            delete_on_termination: true
+          tags:
+            - Kubernetes
+            - worker
+          availability_zone: nova
+          flavor_update_policy: REPLACE
+          image_update_policy: REPLACE
+          user_data_format: RAW
+          user_data:
+            str_replace:
+              template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/packer/k8s-base/join-worker.sh?ts=1572824027"}
+              params:
+                $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
+                $ENDPOINT: { get_param: endpoint }
+                $CLUSTER_CIDR: { get_param: cluster-cidr }
+                $OS_AUTH_URL: { get_param: os-auth-url }
+                $OS_APPLICATION_CREDENTIAL_ID: {get_param: os-acid}
+                $OS_APPLICATION_CREDENTIAL_SECRET: { get_param: os-acs }
+                $OS_REGION_NAME: { get_param: os-region }
+                $LB_SUBNET_ID: { get_resource: k8s_subnet }
+                $LB_FLOATING_NETWORK_ID: { get_param: floating-ip-network }
+                $NET_PUBLIC: { get_param: subnet-name }
+                $NET_INTERNAL: { get_param: subnet-name }
+          user_data_update_policy: REPLACE
+          networks: 
+            - network: { get_resource: k8s_net }
+    depends_on: 
+      - master_node
+      - master_condition
+  
+  master_instance_port:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_resource: k8s_net }
+      fixed_ips:
+      - subnet: { get_resource: k8s_subnet }
+        ip_address: { get_param: endpoint-ip}
+
+  master_node: 
     type: "OS::Nova::Server"
     properties: 
       networks: 
         - port: { get_resource: master_instance_port }
       name: "master-1"
-      flavor: "m1.medium"
+      flavor: { get_param: master-flavor }
       block_device_mapping_v2:
       - image: { get_param: image }
         volume_size: 20
@@ -153,7 +231,7 @@ resources:
         - master
       user_data:
         str_replace:
-          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/packer/k8s-base/init-master.sh?ts=1572253108" }
+          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/packer/k8s-base/init-master.sh?ts=1572824027" }
           params:
             wc_notify: { get_attr: [wait_handle, curl_cli] }
             $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
@@ -169,20 +247,6 @@ resources:
             $NET_PUBLIC: { get_param: subnet-name }
             $NET_INTERNAL: { get_param: subnet-name }
 
-  master_condition_worker:
-    type: OS::Heat::WaitCondition
-    properties:
-      handle: { get_resource: wait_handle_worker }
-      count: 1
-      timeout: 120
-    depends_on: 
-      - master_node1
-      - master_condition
-
-
-  wait_handle_worker:
-    type: OS::Heat::WaitConditionHandle
-
   etcd_bucket: 
     type: "OS::Swift::Container"
     properties: 
@@ -190,45 +254,7 @@ resources:
       name: "k8s-etcd-backup"
 
   
-  worker: 
-    type: "OS::Nova::Server"
-    properties: 
-      name: "worker"
-      flavor: "m1.small"
-      key_name: { get_param: key-name }
-      block_device_mapping_v2:
-      - image: { get_param: image }
-        volume_size: 20
-        delete_on_termination: true
-      tags:
-        - Kubernetes
-        - worker
-      availability_zone: nova
-      flavor_update_policy: REPLACE
-      image_update_policy: REPLACE
-      user_data_format: RAW
-      user_data:
-        str_replace:
-          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/packer/k8s-base/join-worker.sh?ts=1572253108"}
-          params:
-            wc_notify: { get_attr: [wait_handle_worker, curl_cli] }
-            $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
-            $ENDPOINT: { get_param: endpoint }
-            $CLUSTER_CIDR: { get_param: cluster-cidr }
-            $OS_AUTH_URL: { get_param: os-auth-url }
-            $OS_APPLICATION_CREDENTIAL_ID: {get_param: os-acid}
-            $OS_APPLICATION_CREDENTIAL_SECRET: { get_param: os-acs }
-            $OS_REGION_NAME: { get_param: os-region }
-            $LB_SUBNET_ID: { get_resource: k8s_subnet }
-            $LB_FLOATING_NETWORK_ID: { get_param: floating-ip-network }
-            $NET_PUBLIC: { get_param: subnet-name }
-            $NET_INTERNAL: { get_param: subnet-name }
-      user_data_update_policy: REPLACE
-      networks: 
-        - network: { get_resource: k8s_net }
-    depends_on: 
-      - master_node1
-      - master_condition
+  
 
 outputs:
   wc_kube_config:
