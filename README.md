@@ -35,3 +35,4 @@ Your environment is ready!
 - Dynamically configure everything via ~terraform~ heat
 - kubectl plugin for quick installs/boostrap
 - include/incorperate git version control of cluster such as fluxctl
+- prepull CPO images

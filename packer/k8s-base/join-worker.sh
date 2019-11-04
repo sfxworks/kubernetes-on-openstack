@@ -49,7 +49,7 @@ public-network-name=$NET_PUBLIC
 internal-network-name=$NET_INTERNAL
 ipv6-support-disabled=false
 
-[Router]
+[Route]
 router-id=$ROUTER_ID
 EOF
 
