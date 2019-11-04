@@ -135,7 +135,7 @@ spec:
       - args:
         - /bin/openstack-cloud-controller-manager
         - --v=1
-        - --cloud-config=$(CLOUD_CONFIG)
+        - --cloud-config=/etc/config/cloud-config
         - --cloud-provider=openstack
         - --use-service-account-credentials=true
         - --address=127.0.0.1
@@ -143,7 +143,7 @@ spec:
         - --cluster-cidr=$CLUSTER_CIDR
         env:
         - name: CLOUD_CONFIG
-          value: /etc/config/cloud.conf
+          value: /etc/config/cloud-config
         image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:latest
         imagePullPolicy: Always
         name: openstack-cloud-controller-manager
@@ -195,14 +195,17 @@ spec:
           type: DirectoryOrCreate
         name: ca-certs
       - name: cloud-config-volume
-        secret:
-          defaultMode: 420
-          secretName: cloud-config
+        hostPath:
+          path: /etc/kubernetes/cloud-config
+          type: File
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
     type: RollingUpdate
 EOF
+
+sudo cp /etc/kubernetes/cloud-config cloud.conf
+kubectl create secret generic -n kube-system cloud-config --from-file=cloud.conf
 
 kubectl apply -f $HOME/openstack-cloud-controller-manager-ds.yaml
 kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/00-CCM/cillium.yaml
