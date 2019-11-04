@@ -268,7 +268,7 @@ resources:
           user_data_format: RAW
           user_data:
             str_replace:
-              template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/join-worker.sh?ts=1572855312"}
+              template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/join-worker.sh?ts=1572855994"}
               params:
                 $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
                 $ENDPOINT: { get_param: endpoint }
@@ -281,6 +281,7 @@ resources:
                 $LB_FLOATING_NETWORK_ID: { get_param: floating-ip-network }
                 $NET_PUBLIC: { get_param: subnet-name }
                 $NET_INTERNAL: { get_param: subnet-name }
+                $ROUTER_ID: { get_param: router-id }
           user_data_update_policy: REPLACE
           networks: 
             - network: { get_resource: k8s_net }
@@ -318,7 +319,7 @@ resources:
         - master
       user_data:
         str_replace:
-          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/init-master.sh?ts=1572855312" }
+          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/init-master.sh?ts=1572855994" }
           params:
             wc_notify: { get_attr: [wait_handle, curl_cli] }
             $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
@@ -333,6 +334,7 @@ resources:
             $LB_FLOATING_NETWORK_ID: { get_param: floating-ip-network }
             $NET_PUBLIC: { get_param: subnet-name }
             $NET_INTERNAL: { get_param: subnet-name }
+            $ROUTER_ID: { get_param: router-id }
             #$KMS_KEY_ID: {str_split: [ '/', { get_resource: ['kms_plugin_secret', 'secret_ref']}, 5]}
             
   etcd_bucket: 

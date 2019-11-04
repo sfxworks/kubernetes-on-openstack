@@ -49,10 +49,13 @@ node-volume-attach-limit=128
 public-network-name=$NET_PUBLIC
 internal-network-name=$NET_INTERNAL
 ipv6-support-disabled=false
+
+[Router]
+router-id=$ROUTER_ID
 EOF
 
+systemctl daemon-reload
+systemctl restart kubelet
+
 kubeadm join --config /etc/kubernetes/kubeadm-config.yaml
-
-wc_notify --data-binary '{"status": "SUCCESS"}'
-
 HERE

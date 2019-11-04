@@ -80,6 +80,9 @@ node-volume-attach-limit=128
 public-network-name=$NET_PUBLIC
 internal-network-name=$NET_INTERNAL
 ipv6-support-disabled=false
+
+[Router]
+router-id=$ROUTER_ID
 EOF
 
 
