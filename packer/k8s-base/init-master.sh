@@ -204,8 +204,8 @@ spec:
     type: RollingUpdate
 EOF
 
-sudo cp /etc/kubernetes/cloud-config cloud.conf
-kubectl create secret generic -n kube-system cloud-config --from-file=cloud.conf
+sudo cp /etc/kubernetes/cloud-config $HOME/cloud.conf
+kubectl create secret generic -n kube-system cloud-config --from-file=$HOME/cloud.conf
 
 kubectl apply -f $HOME/openstack-cloud-controller-manager-ds.yaml
 kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/00-CCM/cillium.yaml
