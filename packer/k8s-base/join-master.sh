@@ -20,7 +20,7 @@ controlPlane:
   certificateKey: $CERTIFICATE_KEY
 EOF
 
-cat <<EOF | sudo tee /etc/default/kubelet/kubelet-extra-args.env
+cat <<EOF | sudo tee /etc/default/kubelet
 KUBELET_EXTRA_ARGS="--cloud-provider=external --network-plugin=kubenet --non-masquerade-cidr=$CLUSTER_CIDR"
 EOF
 
