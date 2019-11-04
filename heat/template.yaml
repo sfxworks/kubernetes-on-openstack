@@ -14,8 +14,8 @@ description: "Kubeadm Template utilizing the kubadm community image."
 parameters:
   cluster-cidr:
     label: Cluster CIDR
-    description: Network range for your cluster.
-    default: "10.0.2.0/24"
+    description: Network range for your cluster. Must be at least a /16 for kubenet to assign each node a /24 to.
+    default: "10.1.0.0/16"
     type: string
   endpoint:
     type: string
@@ -36,7 +36,6 @@ parameters:
     label: Flavor of masters
     constraints:
     - allowed_values:
-      - m1.small
       - m1.medium
       - m1.large
       - m1.xlarge
@@ -65,7 +64,7 @@ parameters:
     type: string
   certificate-key:
     label: Certificate Key
-    description: The key used by master nodes to create additional control plane nodes. Certs only contained within cluster as secret for 2 hours.
+    description: Key used to encrypt the control-plane certificates in the kubeadm-certs Secret.
     default: e6a2eb8581237ab72a4f494f30285ec12a9694d750b9785706a83bfcbbbd2204
     type: string
   dns:
@@ -124,7 +123,7 @@ parameters:
     type: string
   endpoint-ip:
     type: string
-    default: "10.0.2.11"
+    default: "10.1.0.11"
     description: The internal IP address that the endpoint resolves to. 
   
 
@@ -269,7 +268,7 @@ resources:
           user_data_format: RAW
           user_data:
             str_replace:
-              template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/join-worker.sh?ts=1572848208"}
+              template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/join-worker.sh?ts=1572852851"}
               params:
                 $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
                 $ENDPOINT: { get_param: endpoint }
@@ -319,7 +318,7 @@ resources:
         - master
       user_data:
         str_replace:
-          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/init-master.sh?ts=1572848208" }
+          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/init-master.sh?ts=1572852851" }
           params:
             wc_notify: { get_attr: [wait_handle, curl_cli] }
             $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }

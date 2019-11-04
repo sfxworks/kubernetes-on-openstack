@@ -19,7 +19,7 @@ data:
   cluster-name: default
   tofqdns-enable-poller: "false"
   wait-bpf-mount: "false"
-  container-runtime: containerd
+  container-runtime: none
   masquerade: "true"
   install-iptables-rules: "true"
   auto-direct-node-routes: "false"
