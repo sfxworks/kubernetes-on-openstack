@@ -108,6 +108,13 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-ope
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-role-bindings.yaml
 
 cat <<EOF | sudo tee $HOME/openstack-cloud-controller-manager-ds.yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloud-controller-manager
+  namespace: kube-system
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
