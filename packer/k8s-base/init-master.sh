@@ -144,7 +144,7 @@ spec:
         - --address=127.0.0.1
         - --allocate-node-cidrs=true
         - --cluster-cidr=$CLUSTER_CIDR
-        image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:latest
+        image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:v1.16.0
         imagePullPolicy: Always
         name: openstack-cloud-controller-manager
         resources:
