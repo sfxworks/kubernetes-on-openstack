@@ -97,5 +97,114 @@ echo wc_notify --data-binary '{"status": "SUCCESS", "reason": "config", "id": "c
 
 HERE
 
-export ADMIN_CONFIG=$(cat /etc/kubernetes/admin.conf | base64 -w 0)
+export ADMIN_CONFIG=$(cat /etc/kubernetes/admin.conf)
 wc_notify --data-binary '{"status": "SUCCESS", "reason": "config", "id": "config", "data": "'"$ADMIN_CONFIG"'"}'
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-roles.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-role-bindings.yaml
+
+cat <<EOF | sudo tee ~/openstack-cloud-controller-manager-ds.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    k8s-app: openstack-cloud-controller-manager
+  name: openstack-cloud-controller-manager
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: openstack-cloud-controller-manager
+  template:
+    metadata:
+      labels:
+        k8s-app: openstack-cloud-controller-manager
+    spec:
+      containers:
+      - args:
+        - /bin/openstack-cloud-controller-manager
+        - --v=1
+        - --cloud-config=$(CLOUD_CONFIG)
+        - --cloud-provider=openstack
+        - --use-service-account-credentials=true
+        - --address=127.0.0.1
+        - --allocate-node-cidrs=true
+        - --cluster-cidr=$CLUSTER_CIDR
+        env:
+        - name: CLOUD_CONFIG
+          value: /etc/config/cloud.conf
+        image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:latest
+        imagePullPolicy: Always
+        name: openstack-cloud-controller-manager
+        resources:
+          requests:
+            cpu: 200m
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/kubernetes/pki
+          name: k8s-certs
+          readOnly: true
+        - mountPath: /etc/ssl/certs
+          name: ca-certs
+          readOnly: true
+        - mountPath: /etc/config
+          name: cloud-config-volume
+          readOnly: true
+        - mountPath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec
+          name: flexvolume-dir
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        runAsUser: 1001
+      serviceAccount: cloud-controller-manager
+      serviceAccountName: cloud-controller-manager
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - effect: NoSchedule
+        key: node.cloudprovider.kubernetes.io/uninitialized
+        value: "true"
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      volumes:
+      - hostPath:
+          path: /usr/libexec/kubernetes/kubelet-plugins/volume/exec
+          type: DirectoryOrCreate
+        name: flexvolume-dir
+      - hostPath:
+          path: /etc/kubernetes/pki
+          type: DirectoryOrCreate
+        name: k8s-certs
+      - hostPath:
+          path: /etc/ssl/certs
+          type: DirectoryOrCreate
+        name: ca-certs
+      - name: cloud-config-volume
+        secret:
+          defaultMode: 420
+          secretName: cloud-config
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+EOF
+
+kubectl apply -f ~/openstack-cloud-controller-manager-ds.yaml
+kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/00-CCM/cillium.yaml
+
+
+#Cinder
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-controllerplugin-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-controllerplugin.yaml 
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-nodeplugin-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-nodeplugin.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/csi-cinder-driver.yaml
+kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/10-CSI/storage-class.yaml
