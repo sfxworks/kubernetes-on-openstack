@@ -135,7 +135,7 @@ spec:
       - args:
         - /bin/openstack-cloud-controller-manager
         - --v=1
-        - --cloud-config=/etc/config/cloud-config
+        - --cloud-config=$(CLOUD_CONFIG)
         - --cloud-provider=openstack
         - --use-service-account-credentials=true
         - --address=127.0.0.1
@@ -143,7 +143,7 @@ spec:
         - --cluster-cidr=$CLUSTER_CIDR
         env:
         - name: CLOUD_CONFIG
-          value: /etc/config/cloud-config
+          value: /etc/config/cloud.conf
         image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:latest
         imagePullPolicy: Always
         name: openstack-cloud-controller-manager
@@ -195,9 +195,9 @@ spec:
           type: DirectoryOrCreate
         name: ca-certs
       - name: cloud-config-volume
-        hostPath:
-          path: /etc/kubernetes/cloud-config
-          type: File
+        secret:
+          defaultMode: 420
+          secretName: cloud-config
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
