@@ -269,7 +269,7 @@ resources:
           user_data_format: RAW
           user_data:
             str_replace:
-              template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/join-worker.sh?ts=1572824027"}
+              template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/join-worker.sh?ts=1572848208"}
               params:
                 $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
                 $ENDPOINT: { get_param: endpoint }
@@ -319,7 +319,7 @@ resources:
         - master
       user_data:
         str_replace:
-          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/init-master.sh?ts=1572824027" }
+          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/init-master.sh?ts=1572848208" }
           params:
             wc_notify: { get_attr: [wait_handle, curl_cli] }
             $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }

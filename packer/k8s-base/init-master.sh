@@ -107,7 +107,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-roles.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-role-bindings.yaml
 
-cat <<EOF | sudo tee ~/openstack-cloud-controller-manager-ds.yaml
+cat <<EOF | sudo tee $HOME/openstack-cloud-controller-manager-ds.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -197,8 +197,8 @@ spec:
     type: RollingUpdate
 EOF
 
-kubectl apply -f ~/openstack-cloud-controller-manager-ds.yaml
-kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/00-CCM/cillium.yaml
+kubectl apply -f $HOME/openstack-cloud-controller-manager-ds.yaml
+kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/00-CCM/cillium.yaml
 
 
 #Cinder
@@ -207,4 +207,4 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-ope
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-nodeplugin-rbac.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-nodeplugin.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/csi-cinder-driver.yaml
-kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/10-CSI/storage-class.yaml
+kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/10-CSI/storage-class.yaml
