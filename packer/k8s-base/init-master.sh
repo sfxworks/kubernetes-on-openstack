@@ -97,7 +97,7 @@ echo wc_notify --data-binary '{"status": "SUCCESS", "reason": "config", "id": "c
 
 HERE
 
-export ADMIN_CONFIG=$(cat /etc/kubernetes/admin.conf)
+export ADMIN_CONFIG=$(cat /etc/kubernetes/admin.conf | base64 -w 0)
 wc_notify --data-binary '{"status": "SUCCESS", "reason": "config", "id": "config", "data": "'"$ADMIN_CONFIG"'"}'
 
 mkdir -p $HOME/.kube

@@ -146,54 +146,75 @@ resources:
       description: Ruleset for kubeadm. Generic.
       name: k8s-ruleset
       rules:
-        - direction: Ingress
+        - direction: ingress
           port_range_min: 6443
           port_range_max: 6443
           protocol: tcp
           remote_ip_prefix: "0.0.0.0/0"
           remote_mode: remote_ip_prefix
-        - direction: Ingress
-          port_range_min: 2379
-          port_range_max: 2380
-          protocol: tcp
-          remote_group_id: { get_resource: sec_rules}
-          remote_mode: remote_group_id
-        - direction: Ingress
-          port_range_min: 10250
-          port_range_max: 10252
-          protocol: tcp
-          remote_group_id: { get_resource: sec_rules}
-          remote_mode: remote_group_id
-        - direction: Ingress
+        - direction: ingress
           port_range_min: 30000
           port_range_max: 32767
           protocol: tcp
           remote_ip_prefix: "0.0.0.0/0"
           remote_mode: remote_ip_prefix
-        - direction: Ingress
-          port_range_min: 0
-          port_range_max: 65535
-          protocol: tcp
-          remote_group_id: { get_resource: sec_rules}
-          remote_mode: remote_group_id
-        - direction: Ingress
-          port_range_min: 0
-          port_range_max: 65535
-          protocol: udp
-          remote_group_id: { get_resource: sec_rules}
-          remote_mode: remote_group_id
-        - direction: Egress
-          port_range_min: 0
+        - direction: egress
+          port_range_min: 1
           port_range_max: 65535
           protocol: tcp
           remote_ip_prefix: "0.0.0.0/0"
           remote_mode: remote_ip_prefix
-        - direction: Egress
-          port_range_min: 0
+        - direction: egress
+          port_range_min: 1
           port_range_max: 65535
           protocol: udp
           remote_ip_prefix: "0.0.0.0/0"
           remote_mode: remote_ip_prefix
+
+  sec_rule_self_etcd:
+    type: OS::Neutron::SecurityGroupRule
+    properties:
+      description: etcd
+      direction: ingress
+      port_range_min: 2379
+      port_range_max: 2380
+      protocol: tcp
+      remote_group: { get_resource: sec_rules}
+      security_group: { get_resource: sec_rules}
+  
+  sec_rule_self_controller:
+    type: OS::Neutron::SecurityGroupRule
+    properties:
+      description: control plane
+      direction: ingress
+      port_range_min: 10250
+      port_range_max: 10252
+      protocol: tcp
+      remote_group: { get_resource: sec_rules}
+      security_group: { get_resource: sec_rules}
+  
+  sec_rule_self_allow_all_tcp:
+    type: OS::Neutron::SecurityGroupRule
+    properties:
+      description: Allow all communication between self. TCP. Use PSP to isolate workloads.
+      direction: ingress
+      port_range_min: 1
+      port_range_max: 65535
+      protocol: tcp
+      remote_group: { get_resource: sec_rules}
+      security_group: { get_resource: sec_rules}
+  sec_rule_self_allow_all_udp:
+    type: OS::Neutron::SecurityGroupRule
+    properties:
+      description: Allow all communication between self. TCP. Use PSP to isolate workloads.
+      direction: ingress
+      port_range_min: 1
+      port_range_max: 65535
+      protocol: udp
+      remote_group: { get_resource: sec_rules}
+      security_group: { get_resource: sec_rules}
+
+
 
   k8s_net:
     type: OS::Neutron::Net
@@ -231,7 +252,8 @@ resources:
       max_size: { get_param: worker-size }
       resource:
         type: "OS::Nova::Server"
-        properties: 
+        properties:
+          security_groups: [{get_resource: sec_rules}]
           flavor: {get_param: worker-flavor}
           key_name: { get_param: key-name }
           block_device_mapping_v2:
@@ -247,7 +269,7 @@ resources:
           user_data_format: RAW
           user_data:
             str_replace:
-              template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/packer/k8s-base/join-worker.sh?ts=1572824027"}
+              template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/join-worker.sh?ts=1572824027"}
               params:
                 $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
                 $ENDPOINT: { get_param: endpoint }
@@ -271,6 +293,7 @@ resources:
     type: OS::Neutron::Port
     properties:
       network: { get_resource: k8s_net }
+      security_groups: [{ get_resource: sec_rules }]
       fixed_ips:
       - subnet: { get_resource: k8s_subnet }
         ip_address: { get_param: endpoint-ip}
@@ -296,7 +319,7 @@ resources:
         - master
       user_data:
         str_replace:
-          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/master/packer/k8s-base/init-master.sh?ts=1572824027" }
+          template: {get_file: "https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/packer/k8s-base/init-master.sh?ts=1572824027" }
           params:
             wc_notify: { get_attr: [wait_handle, curl_cli] }
             $BOOTSTRAP_TOKEN: { get_param: bootstrap-token }
