@@ -5,7 +5,6 @@ sudo su <<HERE
 set -e
 mkdir -p /etc/kubernetes
 mkdir -p /var/lib/kubelet
-mkdir -p /etc/default/kubelet
 
 
 cat <<EOF | sudo tee /etc/kubernetes/kubeadm-config.yaml
