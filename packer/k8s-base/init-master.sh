@@ -209,7 +209,7 @@ kubectl create secret generic -n kube-system cloud-config --from-file=$HOME/clou
 kubectl create -f $HOME/openstack-cloud-controller-manager-ds.yaml
 kubectl create -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/00-CCM/cillium.yaml  
 
-kubectl rollout status ds/openstack-cloud-controller-manager
+kubectl rollout status ds/openstack-cloud-controller-manager -n kube-system
 wc_notify --data-binary '{"status": "SUCCESS", "reason": "Cloud Control Manager"}'
 
 
