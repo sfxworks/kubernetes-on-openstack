@@ -20,7 +20,7 @@ controlPlane:
 EOF
 
 cat <<EOF | sudo tee /etc/default/kubelet
-KUBELET_EXTRA_ARGS="--cloud-provider=external --network-plugin=kubenet --non-masquerade-cidr=$CLUSTER_CIDR"
+KUBELET_EXTRA_ARGS="--cloud-provider=external --network-plugin=kubenet --non-masquerade-cidr=$CLUSTER_CIDR --allocate-node-cidrs=true"
 EOF
 
 cat <<EOF | sudo tee /etc/kubernetes/cloud-config

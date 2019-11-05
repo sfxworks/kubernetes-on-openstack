@@ -49,7 +49,7 @@ EOF
 
 
 cat <<EOF | sudo tee /etc/default/kubelet
-KUBELET_EXTRA_ARGS="--cloud-provider=external --network-plugin=kubenet --non-masquerade-cidr=$CLUSTER_CIDR"
+KUBELET_EXTRA_ARGS="--cloud-provider=external --network-plugin=kubenet --non-masquerade-cidr=$CLUSTER_CIDR --allocate-node-cidrs=true"
 EOF
 
 cat <<EOF | sudo tee /etc/kubernetes/cloud-config
@@ -75,7 +75,7 @@ bs-version=v2
 node-volume-attach-limit=128
 
 [Networking]
-public-network-name=$NET_PUBLIC
+#public-network-name=$NET_PUBLIC
 internal-network-name=$NET_INTERNAL
 ipv6-support-disabled=false
 
@@ -144,6 +144,7 @@ spec:
         - --address=127.0.0.1
         - --allocate-node-cidrs=true
         - --cluster-cidr=$CLUSTER_CIDR
+        - --network-plugin=kubenet
         image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:v1.16.0
         imagePullPolicy: Always
         name: openstack-cloud-controller-manager
