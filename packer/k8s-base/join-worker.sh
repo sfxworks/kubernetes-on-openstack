@@ -61,6 +61,6 @@ kubeadm join --config /etc/kubernetes/kubeadm-config.yaml
 sleep 120
 
 systemctl daemon-reload
-systemctl restart kubelet
+systemctl restart kubelet 
 
 HERE
