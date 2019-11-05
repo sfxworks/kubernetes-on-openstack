@@ -107,8 +107,8 @@ mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-roles.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-role-bindings.yaml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-roles.yaml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/cluster/addons/rbac/cloud-controller-manager-role-bindings.yaml
 
 cat <<EOF | sudo tee $HOME/openstack-cloud-controller-manager-ds.yaml
 ---
@@ -206,15 +206,18 @@ EOF
 
 sudo cp /etc/kubernetes/cloud-config $HOME/cloud.conf
 kubectl create secret generic -n kube-system cloud-config --from-file=$HOME/cloud.conf
+kubectl create -f $HOME/openstack-cloud-controller-manager-ds.yaml
+kubectl create -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/00-CCM/cillium.yaml  
 
-kubectl apply -f $HOME/openstack-cloud-controller-manager-ds.yaml
-kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/00-CCM/cillium.yaml
+kubectl rollout status ds/openstack-cloud-controller-manager
+wc_notify --data-binary '{"status": "SUCCESS", "reason": "Cloud Control Manager"}'
+
 
 
 #Cinder
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-controllerplugin-rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-controllerplugin.yaml 
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-nodeplugin-rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-nodeplugin.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/csi-cinder-driver.yaml
-kubectl apply -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/10-CSI/storage-class.yaml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-controllerplugin-rbac.yaml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-controllerplugin.yaml 
+kubectl create -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-nodeplugin-rbac.yaml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/cinder-csi-nodeplugin.yaml
+kubectl create -f https://raw.githubusercontent.com/kubernetes/cloud-provider-openstack/master/manifests/cinder-csi-plugin/csi-cinder-driver.yaml
+kubectl create -f https://raw.githubusercontent.com/sfxworks/kubernetes-on-openstack/dev/10-CSI/storage-class.yaml
