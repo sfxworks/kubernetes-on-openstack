@@ -55,7 +55,6 @@ EOF
 
 systemctl daemon-reload
 systemctl restart kubelet
-sleep 180
 
 kubeadm join --config /etc/kubernetes/kubeadm-config.yaml
 HERE
