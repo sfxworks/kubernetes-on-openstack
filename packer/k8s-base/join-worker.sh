@@ -9,6 +9,33 @@ mkdir -p /var/lib/kubelet
 
 cat <<EOF | sudo tee /etc/kubernetes/kubeadm-config.yaml
 apiVersion: kubeadm.k8s.io/v1beta2
+kind: InitConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: "external"
+bootstrapTokens:
+- token: $BOOTSTRAP_TOKEN
+  description: kubeadm bootstrap token
+  ttl: 1h
+certificateKey: $CERTIFICATE_KEY
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: stable
+controlPlaneEndpoint: $ENDPOINT:6443
+controllerManager:
+  extraVolumes:
+  - name: "cloud-config"
+    hostPath: "/etc/kubernetes/cloud-config"
+    mountPath: "/etc/kubernetes/cloud-config"
+    readOnly: true
+    pathType: FileOrCreate
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+---
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: JoinConfiguration
 discovery:
   bootstrapToken:
