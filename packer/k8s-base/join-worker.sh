@@ -6,44 +6,6 @@ set -e
 mkdir -p /etc/kubernetes
 mkdir -p /var/lib/kubelet
 
-
-cat <<EOF | sudo tee /etc/kubernetes/kubeadm-config.yaml
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: InitConfiguration
-nodeRegistration:
-  kubeletExtraArgs:
-    cloud-provider: "external"
-bootstrapTokens:
-- token: $BOOTSTRAP_TOKEN
-  description: kubeadm bootstrap token
-  ttl: 1h
----
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: ClusterConfiguration
-kubernetesVersion: stable
-controlPlaneEndpoint: $ENDPOINT:6443
-controllerManager:
-  extraVolumes:
-  - name: "cloud-config"
-    hostPath: "/etc/kubernetes/cloud-config"
-    mountPath: "/etc/kubernetes/cloud-config"
-    readOnly: true
-    pathType: FileOrCreate
----
-apiVersion: kubeproxy.config.k8s.io/v1alpha1
-kind: KubeProxyConfiguration
-mode: ipvs
----
-apiVersion: kubeadm.k8s.io/v1beta2
-kind: JoinConfiguration
-discovery:
-  bootstrapToken:
-    apiServerEndpoint: $ENDPOINT:6443
-    token: $BOOTSTRAP_TOKEN
-    unsafeSkipCAVerification: true
-  timeout: 5m0s
-EOF
-
 cat <<EOF | sudo tee /etc/default/kubelet
 KUBELET_EXTRA_ARGS="--cloud-provider=external"
 EOF
@@ -71,17 +33,16 @@ bs-version=v2
 node-volume-attach-limit=128
 
 [Networking]
-public-network-name=$NET_PUBLIC
+#public-network-name=$NET_PUBLIC
 internal-network-name=$NET_INTERNAL
 ipv6-support-disabled=false
 
-[Route]
-router-id=$ROUTER_ID
 EOF
 
 systemctl daemon-reload
 systemctl restart kubelet
 
-kubeadm join --config /etc/kubernetes/kubeadm-config.yaml
+kubeadm join $ENDPOINT:6443 --token $BOOTSTRAP_TOKEN --discovery-token-unsafe-skip-ca-verification
+
 
 HERE
