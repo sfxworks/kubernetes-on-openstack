@@ -42,7 +42,7 @@ EOF
 systemctl daemon-reload
 systemctl restart kubelet
 
-kubeadm join $ENDPOINT:6443 --token $BOOTSTRAP_TOKEN --discovery-token-unsafe-skip-ca-verification
+$JOIN_COMMAND
 
 
 HERE

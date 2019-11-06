@@ -1,0 +1,114 @@
+heat_template_version: "2018-08-31"
+description: "Kubeadm Template utilizing the kubadm community image."
+
+parameters:
+  join-command:
+    label: Join Command
+    description: The full kubeadm join command for the target cluster
+    default: "kubeadm join ..."
+    type: string
+  k8s_subnet:
+    label: Subnet ID
+    description: Subnet ID for load balancer to utilize.
+    type: string
+  worker-size:
+    type: number
+    label: Number of worker nodes
+    constraints:
+    - range:
+        min: 1
+  worker-flavor:
+    type: string
+    label: Flavor of workers
+    constraints:
+    - allowed_values:
+      - m1.small
+      - m1.medium
+      - m1.large
+      - m1.xlarge
+  floating-ip-network:
+    label: Floating IP Network
+    description: The Floating IP Network ID to be used by the load balancer.
+    type: string
+  os-auth-url:
+    label: Openstack Identity Endpoint 
+    description: The identity endpoint for openstack.
+    type: string
+  os-acid:
+    label: Application Credential ID 
+    description: The application credential ID to bse used by the cluster's cloud control manager and sub components
+    type: string
+    hidden: true
+  os-acs:
+    label: Application Credential Secret
+    description: The application credential secret to bse used by the cluster's cloud control manager and sub components
+    type: string
+    hidden: true
+  os-region:
+    label: Region
+    description: The region that this cluster should be placed in
+    default: iad1
+    type: string
+    constraints:
+    - allowed_values:
+      - lax1
+      - iad1
+  subnet-name:
+    label: Subnet Name
+    description: The name of the subnet for your cluster.
+    default: k8s-internal
+    type: string
+  image:
+    label: HOT Image
+    description: The base image to be used by the Heat Orchestration Template.
+    default: HOT_Kubernetes-1.16.2-containerd-1.3.0-runc-1.0.0-rc9
+    type: string
+    constraints:
+    - allowed_values:
+      - "HOT_Kubernetes-1.16.2-containerd-1.3.0-runc-1.0.0-rc9"
+  key-name:
+    label: SSH Key
+    description: The name of the SSH key to use
+    default: workbench
+    type: string
+
+resources:  
+  as_worker:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      desired_capacity: { get_param: worker-size }
+      min_size: 1
+      max_size: { get_param: worker-size }
+      resource:
+        type: "OS::Nova::Server"
+        properties:
+          security_groups: ["k8s-ruleset"]
+          flavor: {get_param: worker-flavor}
+          key_name: { get_param: key-name }
+          block_device_mapping_v2:
+          - image: { get_param: image }
+            volume_size: 20
+            delete_on_termination: true
+          tags:
+            - Kubernetes
+            - worker
+          availability_zone: nova
+          flavor_update_policy: REPLACE
+          image_update_policy: REPLACE
+          user_data_format: RAW
+          user_data:
+            str_replace:
+              template: {get_file: "https://object.iad1.imhcloud.net/swift/v1/6a1421e443b941039befca0a6f65d108/za-warudo/join-worker.sh"}
+              params:
+                $JOIN_COMMAND: { get_param: join-command }
+                $OS_AUTH_URL: { get_param: os-auth-url }
+                $OS_APPLICATION_CREDENTIAL_ID: {get_param: os-acid}
+                $OS_APPLICATION_CREDENTIAL_SECRET: { get_param: os-acs }
+                $OS_REGION_NAME: { get_param: os-region }
+                $LB_SUBNET_ID: { get_param: k8s_subnet }
+                $LB_FLOATING_NETWORK_ID: { get_param: floating-ip-network }
+                $NET_PUBLIC: { get_param: subnet-name }
+                $NET_INTERNAL: { get_param: subnet-name }
+          user_data_update_policy: REPLACE
+          networks: 
+            - network: { get_param: subnet-name }
