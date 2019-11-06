@@ -1,10 +1,7 @@
 #!/bin/sh
 set -e
 
-sudo su <<HERE
-set -e
 mkdir -p /etc/kubernetes
-mkdir -p /var/lib/kubelet
 
 cat <<EOF | sudo tee /etc/default/kubelet
 KUBELET_EXTRA_ARGS="--cloud-provider=external"
@@ -36,13 +33,9 @@ node-volume-attach-limit=128
 #public-network-name=$NET_PUBLIC
 internal-network-name=$NET_INTERNAL
 ipv6-support-disabled=false
-
 EOF
 
-systemctl daemon-reload
-systemctl restart kubelet
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
 
-$JOIN_COMMAND
-
-
-HERE
+sudo $JOIN_COMMAND
