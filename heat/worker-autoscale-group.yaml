@@ -98,7 +98,7 @@ resources:
           user_data_format: RAW
           user_data:
             str_replace:
-              template: {get_file: "https://object.iad1.imhcloud.net/swift/v1/6a1421e443b941039befca0a6f65d108/za-warudo/join-worker.sh"}
+              template: {get_file: "https://object.iad1.imhcloud.net/swift/v1/6a1421e443b941039befca0a6f65d108/za-warudo/join-worker2.sh"}
               params:
                 $JOIN_COMMAND: { get_param: join-command }
                 $OS_AUTH_URL: { get_param: os-auth-url }
