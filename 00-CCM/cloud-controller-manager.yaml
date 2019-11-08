@@ -20,6 +20,11 @@ spec:
       labels:
         k8s-app: openstack-cloud-controller-manager
     spec:
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+        - 1.1.1.1
+        - 1.0.0.1
       containers:
       - args:
         - /bin/openstack-cloud-controller-manager
