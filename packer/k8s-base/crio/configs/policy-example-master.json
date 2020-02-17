@@ -1,0 +1,12 @@
+{
+    "default": [{"type": "reject"}],
+    "transports": {
+        "docker": {
+            "docker.io/k8scloudprovider": [{"type": "insecureAcceptAnything"}],
+            "k8s.gcr.io": [{"type": "insecureAcceptAnything"}],
+            "docker.io/weaveworks": [{"type": "insecureAcceptAnything"}],
+            "docker.io/istio": [{"type": "insecureAcceptAnything"}],
+            "quay.io/prometheus": [{"type": "insecureAcceptAnything"}]
+        }
+    }
+}

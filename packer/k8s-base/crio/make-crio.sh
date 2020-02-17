@@ -2,11 +2,13 @@
 
 set -e
 
+#General update / upgrade
 sudo apt update -y 
 sudo apt upgrade -y
 
-sudo apt-get update -y 
+#install tools required to build
 sudo apt-get install -y git golang-go libbtrfs-dev libassuan-dev libdevmapper-dev   libglib2.0-dev   libc6-dev   libgpgme11-dev   libgpg-error-dev   libseccomp-dev   libsystemd-dev   libselinux1-dev   pkg-config   go-md2man   libudev-dev   software-properties-common   gcc   make ipset
+
 
 mkdir work
 export GOPATH=/home/ubuntu/work
@@ -21,17 +23,22 @@ cd ~
 #Install CRIO
 git clone https://github.com/cri-o/cri-o.git
 cd cri-o
-git checkout release-1.16
+git checkout release-1.17
 make BUILDTAGS='seccomp apparmor'
 sudo make install
 sudo make install.config
+sudo mv /tmp/crio.conf /etc/crio/crio.conf
+sudo mkdir -p /etc/containers
+sudo mv /tmp/policy.json /etc/containers/policy.json
 sudo make install.systemd
+sudo systemctl enable crio
+sudo mkdir -p /usr/share/containers/oci/hooks.d
 cd ..
 
 #Install CNI
-wget -q https://github.com/containernetworking/plugins/releases/download/v0.8.3/cni-plugins-linux-amd64-v0.8.3.tgz
+wget -q https://github.com/containernetworking/plugins/releases/download/v0.8.5/cni-plugins-linux-amd64-v0.8.5.tgz
 sudo mkdir -p /opt/cni/bin
-sudo tar -xvf cni-plugins-linux-amd64-v0.8.3.tgz -C /opt/cni/bin/
+sudo tar -xvf cni-plugins-linux-amd64-v0.8.5.tgz -C /opt/cni/bin/
 
 #Install runsc
 wget -q https://storage.googleapis.com/gvisor/releases/nightly/latest/runsc
@@ -59,7 +66,7 @@ echo br_netfilter >> /etc/modules
 echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
 echo '1' > /proc/sys/net/ipv4/ip_forward
 modprobe br_netfilter
-echo 'KUBELET_EXTRA_ARGS="--fail-swap-on=false --cgroup-driver=systemd"' > /etc/default/kubelet
+mv /tmp/kubelet /etc/default/kubelet
 HERE
 
 #Cleanup
@@ -68,3 +75,9 @@ rm -rf conmon
 sudo rm -rf cri-o
 sudo rm -rf work
 rm -rf cni-plugins-linux-amd64-v0.8.3.tgz
+rm -rf linux*deb
+
+
+#Prepull images
+sudo systemctl start crio
+sudo kubeadm config images pull

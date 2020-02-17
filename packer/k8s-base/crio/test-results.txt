@@ -1,0 +1,43 @@
+root@test:~# kubectl get nodes -o wide
+NAME   STATUS   ROLES    AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                                  KERNEL-VERSION     CONTAINER-RUNTIME
+test   Ready    master   62s   v1.17.3   192.168.0.86   <none>        Ubuntu Focal Fossa (development branch)   5.4.0-14-generic   cri-o://1.17.0
+root@test:~# kubectl get pods -o wide -n kube-system
+NAME                           READY   STATUS    RESTARTS   AGE   IP             NODE   NOMINATED NODE   READINESS GATES
+coredns-6955765f44-ngdzj       1/1     Running   0          56s   10.32.0.4      test   <none>           <none>
+coredns-6955765f44-r5kts       1/1     Running   0          56s   10.32.0.3      test   <none>           <none>
+etcd-test                      1/1     Running   0          60s   192.168.0.86   test   <none>           <none>
+kube-apiserver-test            1/1     Running   0          60s   192.168.0.86   test   <none>           <none>
+kube-controller-manager-test   1/1     Running   0          60s   192.168.0.86   test   <none>           <none>
+kube-proxy-mnxbx               1/1     Running   0          56s   192.168.0.86   test   <none>           <none>
+kube-scheduler-test            1/1     Running   0          60s   192.168.0.86   test   <none>           <none>
+weave-net-9wcbf                2/2     Running   0          48s   192.168.0.86   test   <none>           <none>
+root@test:~# kubectl get pods,services -o wide
+NAME                           READY   STATUS    RESTARTS   AGE   IP          NODE   NOMINATED NODE   READINESS GATES
+pod/my-nginx-f97c96f6d-k77h4   1/1     Running   0          48s   10.32.0.2   test   <none>           <none>
+pod/my-nginx-f97c96f6d-tftjs   1/1     Running   0          51s   10.32.0.5   test   <none>           <none>
+NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE   SELECTOR
+service/kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP        79s   <none>
+service/my-nginx     NodePort    10.103.156.162   <none>        80:30258/TCP   42s   app=my-nginx
+root@test:~# curl localhost:30258
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+<p><em>Thank you for using nginx.</em></p>
+</body>

@@ -1,0 +1,25 @@
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: InitConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: "external"
+    cgroup-driver: "systemd"
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: stable
+networking:
+  dnsDomain: dns-domain.sfxworks.net
+  podSubnet: 10.0.0.0/16
+controlPlaneEndpoint: dns-domain.sfxworks.net:6443
+controllerManager:
+  extraVolumes:
+  - name: "cloud-config"
+    hostPath: "/etc/kubernetes/cloud-config"
+    mountPath: "/etc/kubernetes/cloud-config"
+    readOnly: true
+    pathType: FileOrCreate
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs

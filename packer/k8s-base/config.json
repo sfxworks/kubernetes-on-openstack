@@ -1,21 +1,21 @@
 {
   "builders": [{
     "type": "openstack",
-    "image_name": "Kubernetes",
+    "image_name": "Kubernetes-Containerd",
     "identity_endpoint": "https://cloud.lax1.imhcloud.net:5000/v3",
-    "source_image": "",
+    "source_image": "5a92bcdc-c4c3-4989-803f-75836d61d97e",
     "ssh_username": "ubuntu",
     "region": "iad1",
     "reuse_ips": true,
     "flavor": "m1.small",
     "image_visibility": "community",
-    "networks": [""],
-    "image_tags": ["Kubernetes-1.16.3", "cri-o-1.16.1", "Ubuntu-19.10", "runc-v1.0.0-rc9", "runsc-release-20191114.0-39-g20279c305ece", "cni-plugins-v0.8.3"]
+    "networks": ["410f928a-0487-4da5-af10-80ed78bb65f4"],
+    "image_tags": ["Kubernetes-1.17", "containerd-1.3.2", "Ubuntu-19.10", "runc-v1.0.0-rc9", "runsc-release-20191114.0-39-g20279c305ece", "cni-plugins-v0.8.3"]
   }],
   "provisioners": [
     {
       "type": "shell",
-      "script": "./make.sh"
+      "script": "./make-containerd.sh"
     }
 ]
 }

@@ -1,0 +1,2 @@
+qemu-img convert -f qcow2 -O raw focal-server-cloudimg-amd64.img focal-server-cloudimg-amd64.raw
+openstack image create --disk-format raw  --container-format bare --community --file focal-server-cloudimg-amd64.raw Ubuntu-Focal-20.04
