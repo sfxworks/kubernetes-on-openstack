@@ -1,0 +1,39 @@
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: InitConfiguration
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: "external"
+    cgroup-driver: "systemd"
+---
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: stable
+networking:
+  dnsDomain:  
+  podSubnet: 10.0.0.0/16
+controlPlaneEndpoint: :6443
+controllerManager:
+  extraVolumes:
+  - name: "cloud-config"
+    hostPath: "/etc/kubernetes/cloud-config"
+    mountPath: "/etc/kubernetes/cloud-config"
+    readOnly: true
+    pathType: File
+apiServer:
+  extraArgs:
+    encryption-provider-config: /etc/kubernetes/encryption-config.yaml
+  extraVolumes:
+  - name: "encryption-config"
+    hostPath: "/etc/kubernetes/encryption-config.yaml"
+    mountPath: "/etc/kubernetes/encryption-config.yaml"
+    readOnly: true
+    pathType: File
+  - name: "kms-sock"
+    hostPath: "/var/lib/kms"
+    mountPath: "/var/lib/kms"
+    readOnly: true
+    pathType: Directory
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
