@@ -11,7 +11,7 @@ kubernetesVersion: stable
 networking:
   dnsDomain:  
   podSubnet: 10.0.0.0/16
-controlPlaneEndpoint: :6443
+controlPlaneEndpoint: 
 controllerManager:
   extraVolumes:
   - name: "cloud-config"

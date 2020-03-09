@@ -1,2 +1,4 @@
 config.json
 packer/k8s-configured/cloud-config-lax-personal
+*.img
+*.raw
